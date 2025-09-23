@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>事前課題：フラッシュ暗算（実験）</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;margin:20px;line-height:1.6}
+    h1,h2{margin:0 0 12px}
+    .center{display:flex;align-items:center;justify-content:center}
+    .big-box{border-radius:10px;border:1px solid #ddd;padding:20px;margin:12px 0;background:#fafafa}
+    #flashDisplay{font-size:64px;font-weight:700;height:120px;display:flex;align-items:center;justify-content:center}
+    button{padding:8px 12px;border-radius:6px;border:1px solid #999;background:#fff;cursor:pointer}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    .controls{display:flex;gap:8px;flex-wrap:wrap}
+    label{display:flex;gap:6px;align-items:center}
+    input[type="number"]{width:80px;padding:6px;border:1px solid #ccc;border-radius:6px}
+    table{border-collapse:collapse;width:100%;margin-top:12px}
+    th,td{border:1px solid #ddd;padding:8px;text-align:center}
+    .ok{color:green;font-weight:700}
+    .ng{color:red;font-weight:700}
+    .small{font-size:0.9rem;color:#666}
+    .download{margin-top:12px}
+  </style>
+</head>
+<body>
+  <h1>事前課題：フラッシュ暗算（サンプル）</h1>
+  <div class="big-box">
+    <h2>説明</h2>
+    <p class="small">
+      画面中央に素早く数字が1つずつ表示されます。表示が終わったら合計（足し算の答え）を入力して送信してください。<br>
+      試行数や表示速度は研究の都合上、固定されています。
+    </p>
+
+    <div style="margin-top:12px">
+      <div class="controls">
+        <label>試行数:
+          <input id="trials" type="number" min="1" value="5" readonly>
+        </label>
+        <label>シーケンス長（数字個数）:
+          <input id="seqLen" type="number" min="1" value="10" readonly>
+        </label>
+        <label>表示時間（ms）:
+          <input id="showMs" type="number" min="50" value="400" readonly>
+        </label>
+        <label>インターバル（ms）:
+          <input id="gapMs" type="number" min="0" value="400" readonly>
+        </label>
+        <label>数字範囲（1〜N）:
+          <input id="maxDigit" type="number" min="1" value="9">
+        </label>
+        <label><input id="useSingleDigit" type="checkbox" checked> 1桁のみ（checked）</label>
+      </div>
+
+      <div style="margin-top:12px" class="center">
+        <button id="startBtn">開始</button>
+        <button id="stopBtn" disabled>中止</button>
+        <button id="downloadBtn" class="download" disabled>結果をCSVでダウンロード</button>
+        <button id="gotoVideo" style="margin-left:auto">動画ページへ移動</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="big-box center">
+    <div id="flashDisplay" aria-live="polite">準備完了</div>
+  </div>
+
+  <div class="big-box">
+    <div id="promptArea" style="display:none">
+      <p>合計を入力してください：</p>
+      <input id="answerInput" type="number" autocomplete="off" />
+      <button id="submitAnswer">送信</button>
+      <div class="small" id="feedback"></div>
+    </div>
+
+    <div id="summary" style="display:none">
+      <h2>これまでの結果</h2>
+      <table id="resultTable">
+        <thead><tr><th>試行</th><th>表示列</th><th>正解</th><th>回答</th><th>RT(ms)</th><th>正誤</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+/* シンプルで堅牢な実装 */
+(() => {
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const flashDisplay = document.getElementById('flashDisplay');
+  const trialsInput = document.getElementById('trials');
+  const seqLenInput = document.getElementById('seqLen');
+  const showMsInput = document.getElementById('showMs');
+  const gapMsInput = document.getElementById('gapMs');
+  const maxDigitInput = document.getElementById('maxDigit');
+  const useSingleDigit = document.getElementById('useSingleDigit');
+  const promptArea = document.getElementById('promptArea');
+  const answerInput = document.getElementById('answerInput');
+  const submitAnswer = document.getElementById('submitAnswer');
+  const resultTable = document.querySelector('#resultTable tbody');
+  const summary = document.getElementById('summary');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const stopState = { aborted:false };
+
+  let trialIndex = 0;
+  let results = [];
+  let currentSequence = [];
+  let correctSum = 0;
+  let responseStart = 0;
+
+  function randInt(min, max){
+    return Math.floor(Math.random()*(max-min+1)) + min;
+  }
+
+  function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+  async function runOneTrial(seqLen, showMs, gapMs, maxDigit, singleDigit){
+    currentSequence = [];
+    for(let i=0;i<seqLen;i++){
+      const d = singleDigit ? randInt(1, Math.min(9,maxDigit)) : randInt(1, maxDigit);
+      currentSequence.push(d);
+    }
+    correctSum = currentSequence.reduce((a,b)=>a+b,0);
+
+    flashDisplay.textContent = '';
+    await sleep(200);
+    for(let i=0;i<currentSequence.length;i++){
+      flashDisplay.textContent = currentSequence[i];
+      await sleep(showMs);
+      flashDisplay.textContent = '';
+      await sleep(gapMs);
+    }
+
+    promptArea.style.display = 'block';
+    answerInput.value = '';
+    answerInput.focus();
+    responseStart = performance.now();
+    return new Promise(resolve => {
+      submitAnswer.onclick = () => {
+        const rt = Math.round(performance.now() - responseStart);
+        const given = Number(answerInput.value);
+        const ok = (given === correctSum);
+        resolve({sequence: currentSequence.slice(), correct: correctSum, given, rt, ok});
+        promptArea.style.display = 'none';
+      };
+    });
+  }
+
+  async function runAll(){
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+    downloadBtn.disabled = true;
+    stopState.aborted = false;
+    results = [];
+    resultTable.innerHTML = '';
+    summary.style.display = 'none';
+
+    const trials = 5;
+    const seqLen = 10;
+    const showMs = 400;
+    const gapMs = 400;
+    const maxDigit = Math.max(1,Number(maxDigitInput.value)||9);
+    const singleDigit = useSingleDigit.checked;
+
+    for(trialIndex=1; trialIndex<=trials; trialIndex++){
+      if(stopState.aborted) break;
+      flashDisplay.textContent = `試行 ${trialIndex} / ${trials} ...`;
+      const res = await runOneTrial(seqLen, showMs, gapMs, maxDigit, singleDigit);
+      results.push(Object.assign({trial:trialIndex, timestamp:(new Date()).toISOString()}, res));
+      appendResultRow(results[results.length-1]);
+      await sleep(300);
+    }
+
+    flashDisplay.textContent = '終了';
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+    downloadBtn.disabled = results.length===0;
+    summary.style.display = results.length>0? 'block':'none';
+  }
+
+  function appendResultRow(r){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.trial}</td>
+      <td>${r.sequence.join(' ')}</td>
+      <td>${r.correct}</td>
+      <td>${r.given}</td>
+      <td>${r.rt}</td>
+      <td class="${r.ok?'ok':'ng'}">${r.ok? 'OK':'NG'}</td>`;
+    resultTable.appendChild(tr);
+  }
+
+  startBtn.addEventListener('click', ()=>{ runAll().catch(e=>{console.error(e); startBtn.disabled=false; stopBtn.disabled=true; }); });
+  stopBtn.addEventListener('click', ()=>{ stopState.aborted = true; flashDisplay.textContent='中止'; startBtn.disabled=false; stopBtn.disabled=true; promptArea.style.display='none'; });
+
+  downloadBtn.addEventListener('click', ()=>{
+    if(results.length===0) return;
+    const header = ['trial','timestamp','sequence','correct','given','rt','ok'];
+    const rows = results.map(r => [r.trial,r.timestamp,`"${r.sequence.join(' ')}"`,r.correct,r.given,r.rt,r.ok].join(','));
+    const csv = header.join(',') + '\n' + rows.join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'flash_anzan_results.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  document.getElementById('gotoVideo').addEventListener('click', ()=> {
+    window.location.href = './index.html';
+  });
+
+})();
+</script>
+</body>
+</html>
+
+
+
