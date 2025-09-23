@@ -47,9 +47,9 @@
           <input id="gapMs" type="number" min="0" value="400" readonly>
         </label>
         <label>数字範囲（1〜N）:
-          <input id="maxDigit" type="number" min="1" value="9">
+          <input id="maxDigit" type="number" min="1" value="9" readonly>
         </label>
-        <label><input id="useSingleDigit" type="checkbox" checked> 1桁のみ（checked）</label>
+        <label><input id="useSingleDigit" type="checkbox" checked disabled> 1桁のみ（固定）</label>
       </div>
 
       <div style="margin-top:12px" class="center">
@@ -79,6 +79,17 @@
         <thead><tr><th>試行</th><th>表示列</th><th>正解</th><th>回答</th><th>RT(ms)</th><th>正誤</th></tr></thead>
         <tbody></tbody>
       </table>
+
+      <!-- ★ 追加した案内文 -->
+      <div style="margin-top:20px; padding:10px; border:1px solid #ddd; background:#f9f9f9; border-radius:6px;">
+        <p style="font-weight:bold; color:#333;">
+          ▶ 「動画ページへ移動」をクリックして、実験者から指定されたシーンを視聴してください。<br>
+          ▶ ただし、シーンを視聴する前に、このページで必ず事前課題を行ってください。<br>
+          <p style="color:red; font-weight:bold;">
+    ※事前課題は「各実験の最初だけ」ではなく、各シーンを視聴する前に毎回実施してください。
+</p>         
+        </p>
+      </div>
     </div>
   </div>
 
@@ -88,10 +99,6 @@
   const startBtn = document.getElementById('startBtn');
   const stopBtn = document.getElementById('stopBtn');
   const flashDisplay = document.getElementById('flashDisplay');
-  const trialsInput = document.getElementById('trials');
-  const seqLenInput = document.getElementById('seqLen');
-  const showMsInput = document.getElementById('showMs');
-  const gapMsInput = document.getElementById('gapMs');
   const maxDigitInput = document.getElementById('maxDigit');
   const useSingleDigit = document.getElementById('useSingleDigit');
   const promptArea = document.getElementById('promptArea');
@@ -213,6 +220,7 @@
 </script>
 </body>
 </html>
+
 
 
 
