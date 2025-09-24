@@ -80,21 +80,20 @@
         <tbody></tbody>
       </table>
 
-      <!-- ★ 追加した案内文 -->
+      <!-- ★ 案内文 -->
       <div style="margin-top:20px; padding:10px; border:1px solid #ddd; background:#f9f9f9; border-radius:6px;">
         <p style="font-weight:bold; color:#333;">
           ▶ 「動画ページへ移動」をクリックして、実験者から指定されたシーンを視聴してください。<br>
           ▶ ただし、シーンを視聴する前に、このページで必ず事前課題を行ってください。<br>
-          <p style="color:red; font-weight:bold;">
-    ※事前課題は「各実験の最初だけ」ではなく、各シーンを視聴する前に毎回実施してください。
-</p>         
+          <span style="color:red; font-weight:bold;">
+            ※事前課題は「各実験の最初だけ」ではなく、各シーンを視聴する前に毎回実施してください。
+          </span>
         </p>
       </div>
     </div>
   </div>
 
 <script>
-/* シンプルで堅牢な実装 */
 (() => {
   const startBtn = document.getElementById('startBtn');
   const stopBtn = document.getElementById('stopBtn');
@@ -109,7 +108,6 @@
   const downloadBtn = document.getElementById('downloadBtn');
   const stopState = { aborted:false };
 
-  let trialIndex = 0;
   let results = [];
   let currentSequence = [];
   let correctSum = 0;
@@ -118,7 +116,6 @@
   function randInt(min, max){
     return Math.floor(Math.random()*(max-min+1)) + min;
   }
-
   function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 
   async function runOneTrial(seqLen, showMs, gapMs, maxDigit, singleDigit){
@@ -162,14 +159,14 @@
     resultTable.innerHTML = '';
     summary.style.display = 'none';
 
-    const trials = 5;
+    const trials = 2;   // ★ ここを固定
     const seqLen = 10;
     const showMs = 400;
     const gapMs = 400;
     const maxDigit = Math.max(1,Number(maxDigitInput.value)||9);
     const singleDigit = useSingleDigit.checked;
 
-    for(trialIndex=1; trialIndex<=trials; trialIndex++){
+    for(let trialIndex=1; trialIndex<=trials; trialIndex++){
       if(stopState.aborted) break;
       flashDisplay.textContent = `試行 ${trialIndex} / ${trials} ...`;
       const res = await runOneTrial(seqLen, showMs, gapMs, maxDigit, singleDigit);
@@ -215,11 +212,13 @@
   document.getElementById('gotoVideo').addEventListener('click', ()=> {
     window.location.href = './index.html';
   });
-
 })();
 </script>
 </body>
 </html>
+
+
+
 
 
 
