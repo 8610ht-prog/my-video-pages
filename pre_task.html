@@ -56,7 +56,6 @@
         <button id="startBtn">開始</button>
         <button id="stopBtn" disabled>中止</button>
         <button id="downloadBtn" class="download" disabled>結果をCSVでダウンロード</button>
-        <button id="gotoVideo" style="margin-left:auto">動画ページへ移動</button>
       </div>
     </div>
   </div>
@@ -83,8 +82,7 @@
       <!-- ★ 案内文 -->
       <div style="margin-top:20px; padding:10px; border:1px solid #ddd; background:#f9f9f9; border-radius:6px;">
         <p style="font-weight:bold; color:#333;">
-          ▶ 「動画ページへ移動」をクリックして、実験者から指定されたシーンを視聴してください。<br>
-          ▶ ただし、シーンを視聴する前に、このページで必ず事前課題を行ってください。<br>
+          ▶ シーンを視聴する前に、このページで必ず事前課題を行ってください。<br>
           <span style="color:red; font-weight:bold;">
             ※事前課題は「各実験の最初だけ」ではなく、各シーンを視聴する前に毎回実施してください。
           </span>
@@ -208,14 +206,11 @@
     a.click();
     URL.revokeObjectURL(a.href);
   });
-
-  document.getElementById('gotoVideo').addEventListener('click', ()=> {
-    window.location.href = './index.html';
-  });
 })();
 </script>
 </body>
 </html>
+
 
 
 
