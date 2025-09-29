@@ -21,7 +21,25 @@
     .ng{color:red;font-weight:700}
     .small{font-size:0.9rem;color:#666}
     .download{margin-top:12px}
-    #goNextBtn{padding:10px 16px; font-size:1rem; border-radius:8px; background:#4CAF50; color:#fff; border:none; cursor:pointer;}
+    #goNextBtn{
+      padding:10px 16px;
+      font-size:1rem;
+      border-radius:8px;
+      background:#4CAF50;
+      color:#fff;
+      border:none;
+      cursor:pointer;
+    }
+
+    /* 🔴 開始ボタンだけ赤色に変更 */
+    #startBtn {
+      background:#e53935;
+      color:#fff;
+      border:1px solid #b71c1c;
+    }
+    #startBtn:hover {
+      background:#c62828;
+    }
   </style>
 </head>
 <body>
@@ -32,27 +50,15 @@
       画面中央に素早く数字が1つずつ表示されます。表示が終わったら合計（足し算の答え）を入力して送信してください。<br>
       試行数や表示速度は研究の都合上、固定されています。
     </p>
-
     <div style="margin-top:12px">
       <div class="controls">
-        <label>試行数:
-          <input id="trials" type="number" min="1" value="2" readonly>
-        </label>
-        <label>シーケンス長（数字個数）:
-          <input id="seqLen" type="number" min="1" value="10" readonly>
-        </label>
-        <label>表示時間（ms）:
-          <input id="showMs" type="number" min="50" value="400" readonly>
-        </label>
-        <label>インターバル（ms）:
-          <input id="gapMs" type="number" min="0" value="400" readonly>
-        </label>
-        <label>数字範囲（1〜N）:
-          <input id="maxDigit" type="number" min="1" value="9" readonly>
-        </label>
+        <label>試行数: <input id="trials" type="number" min="1" value="2" readonly></label>
+        <label>シーケンス長（数字個数）: <input id="seqLen" type="number" min="1" value="10" readonly></label>
+        <label>表示時間（ms）: <input id="showMs" type="number" min="50" value="400" readonly></label>
+        <label>インターバル（ms）: <input id="gapMs" type="number" min="0" value="400" readonly></label>
+        <label>数字範囲（1〜N）: <input id="maxDigit" type="number" min="1" value="9" readonly></label>
         <label><input id="useSingleDigit" type="checkbox" checked disabled> 1桁のみ（固定）</label>
       </div>
-
       <div style="margin-top:12px" class="center">
         <button id="startBtn">開始</button>
         <button id="stopBtn" disabled>中止</button>
@@ -72,14 +78,14 @@
       <button id="submitAnswer">送信</button>
       <div class="small" id="feedback"></div>
     </div>
-
     <div id="summary" style="display:none">
       <h2>これまでの結果</h2>
       <table id="resultTable">
-        <thead><tr><th>試行</th><th>表示列</th><th>正解</th><th>回答</th><th>RT(ms)</th><th>正誤</th></tr></thead>
+        <thead>
+          <tr><th>試行</th><th>表示列</th><th>正解</th><th>回答</th><th>RT(ms)</th><th>正誤</th></tr>
+        </thead>
         <tbody></tbody>
       </table>
-
       <!-- ★ 追加部分：動画ページへの遷移ボタン -->
       <div style="margin-top:20px; text-align:center;">
         <button id="goNextBtn">実験1シーン1の動画ページへ移動</button>
@@ -87,129 +93,140 @@
     </div>
   </div>
 
-<script>
-(() => {
-  const startBtn = document.getElementById('startBtn');
-  const stopBtn = document.getElementById('stopBtn');
-  const flashDisplay = document.getElementById('flashDisplay');
-  const maxDigitInput = document.getElementById('maxDigit');
-  const useSingleDigit = document.getElementById('useSingleDigit');
-  const promptArea = document.getElementById('promptArea');
-  const answerInput = document.getElementById('answerInput');
-  const submitAnswer = document.getElementById('submitAnswer');
-  const resultTable = document.querySelector('#resultTable tbody');
-  const summary = document.getElementById('summary');
-  const downloadBtn = document.getElementById('downloadBtn');
-  const goNextBtn = document.getElementById('goNextBtn');
-  const stopState = { aborted:false };
+  <script>
+    (() => {
+      const startBtn = document.getElementById('startBtn');
+      const stopBtn = document.getElementById('stopBtn');
+      const flashDisplay = document.getElementById('flashDisplay');
+      const maxDigitInput = document.getElementById('maxDigit');
+      const useSingleDigit = document.getElementById('useSingleDigit');
+      const promptArea = document.getElementById('promptArea');
+      const answerInput = document.getElementById('answerInput');
+      const submitAnswer = document.getElementById('submitAnswer');
+      const resultTable = document.querySelector('#resultTable tbody');
+      const summary = document.getElementById('summary');
+      const downloadBtn = document.getElementById('downloadBtn');
+      const goNextBtn = document.getElementById('goNextBtn');
+      const stopState = { aborted:false };
 
-  let results = [];
-  let currentSequence = [];
-  let correctSum = 0;
-  let responseStart = 0;
+      let results = [];
+      let currentSequence = [];
+      let correctSum = 0;
+      let responseStart = 0;
 
-  function randInt(min, max){
-    return Math.floor(Math.random()*(max-min+1)) + min;
-  }
-  function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+      function randInt(min, max){ return Math.floor(Math.random()*(max-min+1)) + min; }
+      function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 
-  async function runOneTrial(seqLen, showMs, gapMs, maxDigit, singleDigit){
-    currentSequence = [];
-    for(let i=0;i<seqLen;i++){
-      const d = singleDigit ? randInt(1, Math.min(9,maxDigit)) : randInt(1, maxDigit);
-      currentSequence.push(d);
-    }
-    correctSum = currentSequence.reduce((a,b)=>a+b,0);
+      async function runOneTrial(seqLen, showMs, gapMs, maxDigit, singleDigit){
+        currentSequence = [];
+        for(let i=0;i<seqLen;i++){
+          const d = singleDigit ? randInt(1, Math.min(9,maxDigit)) : randInt(1, maxDigit);
+          currentSequence.push(d);
+        }
+        correctSum = currentSequence.reduce((a,b)=>a+b,0);
+        flashDisplay.textContent = '';
+        await sleep(200);
+        for(let i=0;i<currentSequence.length;i++){
+          flashDisplay.textContent = currentSequence[i];
+          await sleep(showMs);
+          flashDisplay.textContent = '';
+          await sleep(gapMs);
+        }
+        promptArea.style.display = 'block';
+        answerInput.value = '';
+        answerInput.focus();
+        responseStart = performance.now();
+        return new Promise(resolve => {
+          submitAnswer.onclick = () => {
+            const rt = Math.round(performance.now() - responseStart);
+            const given = Number(answerInput.value);
+            const ok = (given === correctSum);
+            resolve({sequence: currentSequence.slice(), correct: correctSum, given, rt, ok});
+            promptArea.style.display = 'none';
+          };
+        });
+      }
 
-    flashDisplay.textContent = '';
-    await sleep(200);
-    for(let i=0;i<currentSequence.length;i++){
-      flashDisplay.textContent = currentSequence[i];
-      await sleep(showMs);
-      flashDisplay.textContent = '';
-      await sleep(gapMs);
-    }
+      async function runAll(){
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        downloadBtn.disabled = true;
+        stopState.aborted = false;
+        results = [];
+        resultTable.innerHTML = '';
+        summary.style.display = 'none';
 
-    promptArea.style.display = 'block';
-    answerInput.value = '';
-    answerInput.focus();
-    responseStart = performance.now();
-    return new Promise(resolve => {
-      submitAnswer.onclick = () => {
-        const rt = Math.round(performance.now() - responseStart);
-        const given = Number(answerInput.value);
-        const ok = (given === correctSum);
-        resolve({sequence: currentSequence.slice(), correct: correctSum, given, rt, ok});
-        promptArea.style.display = 'none';
-      };
-    });
-  }
+        const trials = 2; // ★ 固定
+        const seqLen = 10;
+        const showMs = 400;
+        const gapMs = 400;
+        const maxDigit = Math.max(1,Number(maxDigitInput.value)||9);
+        const singleDigit = useSingleDigit.checked;
 
-  async function runAll(){
-    startBtn.disabled = true;
-    stopBtn.disabled = false;
-    downloadBtn.disabled = true;
-    stopState.aborted = false;
-    results = [];
-    resultTable.innerHTML = '';
-    summary.style.display = 'none';
+        for(let trialIndex=1; trialIndex<=trials; trialIndex++){
+          if(stopState.aborted) break;
+          flashDisplay.textContent = `試行 ${trialIndex} / ${trials} ...`;
+          const res = await runOneTrial(seqLen, showMs, gapMs, maxDigit, singleDigit);
+          results.push(Object.assign({trial:trialIndex, timestamp:(new Date()).toISOString()}, res));
+          appendResultRow(results[results.length-1]);
+          await sleep(300);
+        }
+        flashDisplay.textContent = '終了';
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        downloadBtn.disabled = results.length===0;
+        summary.style.display = results.length>0? 'block':'none';
+      }
 
-    const trials = 2;   // ★ 固定
-    const seqLen = 10;
-    const showMs = 400;
-    const gapMs = 400;
-    const maxDigit = Math.max(1,Number(maxDigitInput.value)||9);
-    const singleDigit = useSingleDigit.checked;
+      function appendResultRow(r){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${r.trial}</td>
+                        <td>${r.sequence.join(' ')}</td>
+                        <td>${r.correct}</td>
+                        <td>${r.given}</td>
+                        <td>${r.rt}</td>
+                        <td class="${r.ok?'ok':'ng'}">${r.ok? 'OK':'NG'}</td>`;
+        resultTable.appendChild(tr);
+      }
 
-    for(let trialIndex=1; trialIndex<=trials; trialIndex++){
-      if(stopState.aborted) break;
-      flashDisplay.textContent = `試行 ${trialIndex} / ${trials} ...`;
-      const res = await runOneTrial(seqLen, showMs, gapMs, maxDigit, singleDigit);
-      results.push(Object.assign({trial:trialIndex, timestamp:(new Date()).toISOString()}, res));
-      appendResultRow(results[results.length-1]);
-      await sleep(300);
-    }
+      startBtn.addEventListener('click', ()=>{
+        runAll().catch(e=>{
+          console.error(e);
+          startBtn.disabled=false;
+          stopBtn.disabled=true;
+        });
+      });
 
-    flashDisplay.textContent = '終了';
-    startBtn.disabled = false;
-    stopBtn.disabled = true;
-    downloadBtn.disabled = results.length===0;
-    summary.style.display = results.length>0? 'block':'none';
-  }
+      stopBtn.addEventListener('click', ()=>{
+        stopState.aborted = true;
+        flashDisplay.textContent='中止';
+        startBtn.disabled=false;
+        stopBtn.disabled=true;
+        promptArea.style.display='none';
+      });
 
-  function appendResultRow(r){
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${r.trial}</td>
-      <td>${r.sequence.join(' ')}</td>
-      <td>${r.correct}</td>
-      <td>${r.given}</td>
-      <td>${r.rt}</td>
-      <td class="${r.ok?'ok':'ng'}">${r.ok? 'OK':'NG'}</td>`;
-    resultTable.appendChild(tr);
-  }
+      downloadBtn.addEventListener('click', ()=>{
+        if(results.length===0) return;
+        const header = ['trial','timestamp','sequence','correct','given','rt','ok'];
+        const rows = results.map(r => [r.trial,r.timestamp,`${r.sequence.join(' ')}`,r.correct,r.given,r.rt,r.ok].join(','));
+        const csv = header.join(',') + '\n' + rows.join('\n');
+        const blob = new Blob([csv], {type:'text/csv'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'flash_anzan_results.csv';
+        a.click();
+        URL.revokeObjectURL(a.href);
+      });
 
-  startBtn.addEventListener('click', ()=>{ runAll().catch(e=>{console.error(e); startBtn.disabled=false; stopBtn.disabled=true; }); });
-  stopBtn.addEventListener('click', ()=>{ stopState.aborted = true; flashDisplay.textContent='中止'; startBtn.disabled=false; stopBtn.disabled=true; promptArea.style.display='none'; });
-
-  downloadBtn.addEventListener('click', ()=>{
-    if(results.length===0) return;
-    const header = ['trial','timestamp','sequence','correct','given','rt','ok'];
-    const rows = results.map(r => [r.trial,r.timestamp,`"${r.sequence.join(' ')}"`,r.correct,r.given,r.rt,r.ok].join(','));
-    const csv = header.join(',') + '\n' + rows.join('\n');
-    const blob = new Blob([csv], {type:'text/csv'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'flash_anzan_results.csv';
-    a.click();
-    URL.revokeObjectURL(a.href);
-  });
-
-  // ★ 動画ページへ遷移（scene1-1.htmlに修正）
-  goNextBtn.addEventListener('click', ()=>{
-    window.location.href = "https://8610ht-prog.github.io/my-video-pages/scene1-1.html";
-  });
-})();
-</script>
+      // ★ 動画ページへ遷移（scene1-1.html）
+      goNextBtn.addEventListener('click', ()=>{
+        window.location.href = "https://8610ht-prog.github.io/my-video-pages/scene1-1.html";
+      });
+    })();
+  </script>
 </body>
 </html>
+
+
+
 
