@@ -157,7 +157,7 @@
         summary.style.display = 'none';
 
         const trials = 2; // ★ 固定
-        const seqLen = 10;
+        const seqLen = 8;
         const showMs = 400;
         const gapMs = 400;
         const maxDigit = Math.max(1,Number(maxDigitInput.value)||9);
@@ -185,7 +185,7 @@
                         <td>${r.correct}</td>
                         <td>${r.given}</td>
                         <td>${r.rt}</td>
-                        <td class="${r.ok?'ok':'ng'}">${r.ok? 'OK':'NG'}</td>`;
+                        <td class="${r.ok?'正解！':'惜しい！'}">${r.ok? '正解！':'惜しい！'}</td>`;
         resultTable.appendChild(tr);
       }
 
