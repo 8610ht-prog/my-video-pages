@@ -53,7 +53,7 @@
     <div style="margin-top:12px">
       <div class="controls">
         <label>試行数: <input id="trials" type="number" min="1" value="2" readonly></label>
-        <label>シーケンス長（数字個数）: <input id="seqLen" type="number" min="1" value="10" readonly></label>
+        <label>シーケンス長（数字個数）: <input id="seqLen" type="number" min="1" value="9" readonly></label>
         <label>表示時間（ms）: <input id="showMs" type="number" min="50" value="400" readonly></label>
         <label>インターバル（ms）: <input id="gapMs" type="number" min="0" value="400" readonly></label>
         <label>数字範囲（1〜N）: <input id="maxDigit" type="number" min="1" value="9" readonly></label>
@@ -157,7 +157,7 @@
         summary.style.display = 'none';
 
         const trials = 2; // ★ 固定
-        const seqLen = 10;
+        const seqLen = 9;
         const showMs = 400;
         const gapMs = 400;
         const maxDigit = Math.max(1,Number(maxDigitInput.value)||9);
